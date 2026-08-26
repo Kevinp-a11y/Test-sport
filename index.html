@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Forge" />
+<meta name="theme-color" content="#14120F" />
+<title>Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14120F;
+    --surface: #1E1B17;
+    --surface-2: #262219;
+    --surface-3: #2E2A1F;
+    --border: rgba(255, 143, 92, 0.14);
+    --border-strong: rgba(255, 143, 92, 0.30);
+    --ink: #F2EDE4;
+    --ink-dim: rgba(242, 237, 228, 0.60);
+    --ink-faint: rgba(242, 237, 228, 0.32);
+    --ember: #FF6B35;
+    --ember-bright: #FF8F5C;
+    --push: #FF6B35;
+    --pull: #4FA8D8;
+    --abs: #E0B84F;
+    --cardio: #6FCF97;
+    --epaules: #C77DFF;
+    --biceps: #F2545B;
+    --triceps: #F4A259;
+    --danger: #E06157;
+    --success: #6FCF97;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-user-select: none; user-select: none;
+    min-height: 100%;
+  }
+
+  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .ambient::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(255, 107, 53, 0.12), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(79, 168, 216, 0.08), transparent 45%),
+      radial-gradient(circle at 92% 70%, rgba(224, 184, 79, 0.06), transparent 45%);
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .screen { display: none; flex: 1; flex-direction: column; min-height: 0; }
+  .screen.active { display: flex; }
+  .screen.scrollable.active { display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  ::-webkit-scrollbar { display: none; }
+
+  /* ============ TOPBAR / NAV ============ */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 6px;
+  }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.04em; color: var(--ember-bright); }
+  .streak-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 100px; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+  }
+
+  .content { padding: 8px 20px 20px; flex: 1; }
+
+  .navbar {
+    display: flex; border-top: 1px solid var(--border);
+    background: var(--surface); padding-bottom: var(--safe-bottom);
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 4px 8px; color: var(--ink-faint); cursor: pointer;
+  }
+  .nav-btn.active { color: var(--ember-bright); }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn span { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+
+  /* ============ CARDS génériques ============ */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 22px 0 10px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ============ HOME ============ */
+  .today-card {
+    border-radius: 22px; padding: 24px 20px; margin-top: 4px;
+    position: relative; overflow: hidden;
+    background: linear-gradient(160deg, var(--surface-3), var(--surface));
+    border: 1px solid var(--border-strong);
+  }
+  .today-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .today-title { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 0.02em; margin-bottom: 4px; }
+  .today-sub { font-size: 13px; color: var(--ink-dim); margin-bottom: 18px; }
+  .today-meta { display: flex; gap: 16px; margin-bottom: 18px; }
+  .today-meta-item { font-size: 12px; color: var(--ink-dim); }
+  .today-meta-item b { color: var(--ink); font-weight: 700; }
+  .today-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--ember); color: #14120F; font-weight: 800; font-size: 15px;
+    border-radius: 100px; padding: 15px; cursor: pointer;
+  }
+  .today-btn:active { transform: scale(0.98); }
+  .today-btn.secondary {
+    background: transparent; border: 1px solid var(--border-strong); color: var(--ink);
+    margin-top: 8px;
+  }
+
+  .prog-card.reco { border-color: rgba(111,207,151,0.4); }
+  .prog-card:not(.reco) { background: var(--surface); }
+  .prog-title-alt { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.02em; margin-bottom: 4px; }
+  .prog-lastdone { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+  .rest-card {
+    border-radius: 22px; padding: 24px 20px; margin-top: 4px; text-align: center;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .rest-mark { font-size: 40px; margin-bottom: 10px; }
+  .rest-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; margin-bottom: 6px; }
+  .rest-text { font-size: 13px; color: var(--ink-dim); }
+
+  .cardio-mini {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 16px; margin-top: 12px; cursor: pointer;
+  }
+  .cardio-mini-icon {
+    width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(111, 207, 151, 0.15); color: var(--cardio);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cardio-mini-icon svg { width: 20px; height: 20px; }
+  .cardio-mini-name { font-weight: 700; font-size: 14px; }
+  .cardio-mini-desc { font-size: 11.5px; color: var(--ink-dim); }
+  .cardio-mini-arrow { margin-left: auto; color: var(--ink-faint); }
+
+  .badge-row { display: flex; gap: 10px; overflow-x: auto; padding: 2px 0 6px; }
+  .badge-chip {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px 14px; min-width: 84px; text-align: center;
+  }
+  .badge-chip.locked { opacity: 0.35; }
+  .badge-chip-mark { font-size: 22px; }
+  .badge-chip-label { font-size: 9.5px; font-weight: 700; color: var(--ink-dim); line-height: 1.3; }
+
+  /* ============ LIBRARY ============ */
+  .group-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .group-tab {
+    flex-shrink: 0; padding: 9px 16px; border-radius: 100px; font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer;
+  }
+  .group-tab.active { background: var(--ember); border-color: var(--ember); color: #14120F; }
+
+  .ex-card {
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--ember);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer;
+  }
+  .ex-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .ex-name { font-weight: 700; font-size: 15px; }
+  .ex-tier { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 100px; background: var(--surface-2); color: var(--ink-dim); }
+  .ex-desc { font-size: 12px; color: var(--ink-dim); line-height: 1.4; }
+  .ex-target { font-size: 11.5px; color: var(--ember-bright); font-weight: 600; margin-top: 6px; }
+
+  /* ============ SESSION GUIDÉE ============ */
+  .session-bar {
+    display: flex; align-items: center; gap: 12px; padding: 16px 18px 10px;
+  }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 12px; background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; flex-shrink: 0;
+  }
+  .session-meta { flex: 1; }
+  .session-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .session-name { font-size: 15px; font-weight: 700; }
+
+  .progress-track { height: 4px; background: var(--surface-2); margin: 0 18px 6px; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--ember); border-radius: 4px; transition: width 0.3s; }
+
+  .ex-dots { display: flex; gap: 6px; justify-content: center; padding: 8px 0 4px; }
+  .ex-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-3); }
+  .ex-dot.done { background: var(--success); }
+  .ex-dot.current { background: var(--ember); width: 18px; border-radius: 4px; }
+
+  .session-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px 20px; min-height: 0; }
+
+  .exec-card {
+    width: 100%; max-width: 400px; text-align: center;
+  }
+  .exec-group-tag {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 100px; margin-bottom: 14px;
+  }
+  .exec-name { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 0.02em; margin-bottom: 6px; }
+  .exec-tier-name { font-size: 14px; color: var(--ink-dim); margin-bottom: 22px; }
+
+  .timer-ring-wrap { position: relative; width: 200px; height: 200px; margin: 0 auto 22px; }
+  .timer-ring-wrap svg { transform: rotate(-90deg); }
+  .timer-track { fill: none; stroke: var(--surface-2); stroke-width: 10; }
+  .timer-fill { fill: none; stroke: var(--ember); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .timer-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .timer-num { font-family: 'Bebas Neue', sans-serif; font-size: 46px; line-height: 1; }
+  .timer-label { font-size: 11px; color: var(--ink-dim); margin-top: 4px; }
+
+  .set-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
+  .set-dot {
+    width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--ink-dim);
+    border: 1px solid var(--border);
+  }
+  .set-dot.done { background: rgba(111, 207, 151, 0.15); color: var(--success); border-color: rgba(111,207,151,0.3); }
+  .set-dot.current { background: var(--surface-3); color: var(--ink); border-color: var(--ember); }
+
+  .reps-input-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 22px; }
+  .reps-btn {
+    width: 46px; height: 46px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border);
+    font-size: 22px; font-weight: 700; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .reps-btn:active { transform: scale(0.94); }
+  .reps-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; min-width: 70px; text-align: center; }
+
+  .exec-btn {
+    display: block; width: 100%; max-width: 340px; margin: 0 auto;
+    background: var(--ember); color: #14120F; font-weight: 800; font-size: 15px;
+    border-radius: 100px; padding: 16px; cursor: pointer; text-align: center;
+  }
+  .exec-btn:active { transform: scale(0.98); }
+  .exec-btn.ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--ink); margin-top: 10px; }
+
+  .rest-screen { text-align: center; }
+  .rest-screen .timer-num { color: var(--ember-bright); }
+
+  /* ============ STATS ============ */
+  .period-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 4px; margin-bottom: 18px; }
+  .period-opt { flex: 1; text-align: center; padding: 8px; border-radius: 100px; font-size: 12.5px; font-weight: 700; color: var(--ink-dim); cursor: pointer; }
+  .period-opt.active { background: var(--ember); color: #14120F; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+  .stat-box-num { font-family: 'Bebas Neue', sans-serif; font-size: 30px; line-height: 1; }
+  .stat-box-label { font-size: 11px; color: var(--ink-dim); margin-top: 4px; }
+
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
+  .chart-title { font-size: 12px; font-weight: 700; color: var(--ink-dim); margin-bottom: 12px; }
+  .bar-row { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+  .bar-fill { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; }
+  .bar-tick { font-size: 8.5px; color: var(--ink-faint); }
+
+  .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .badge-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; text-align: center;
+  }
+  .badge-card.locked { opacity: 0.35; }
+  .badge-card-mark { font-size: 26px; margin-bottom: 6px; }
+  .badge-card-label { font-size: 11.5px; font-weight: 700; }
+  .badge-card-sub { font-size: 10px; color: var(--ink-dim); margin-top: 2px; }
+
+  /* ============ MODAL / SHEET ============ */
+  .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; background: rgba(0,0,0,0.55); }
+  .modal.show { display: flex; }
+  .modal-sheet {
+    width: 100%; background: var(--surface); border-radius: 24px 24px 0 0;
+    padding: 10px 20px calc(24px + var(--safe-bottom));
+    max-height: 82vh; overflow-y: auto;
+  }
+  .modal-handle { width: 40px; height: 4px; background: var(--surface-3); border-radius: 4px; margin: 8px auto 16px; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; margin-bottom: 4px; }
+  .modal-text { font-size: 13px; color: var(--ink-dim); margin-bottom: 18px; line-height: 1.5; }
+  .modal-btn {
+    display: block; width: 100%; text-align: center; border: 1px solid var(--border-strong);
+    border-radius: 100px; padding: 14px; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 8px;
+    background: var(--surface-2); color: var(--ink);
+  }
+  .modal-btn.primary { background: var(--ember); border-color: var(--ember); color: #14120F; }
+
+  .toast {
+    position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface-3); border: 1px solid var(--border-strong); color: var(--ink);
+    padding: 12px 20px; border-radius: 100px; font-size: 13px; font-weight: 600;
+    z-index: 60; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--ink-dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div id="app"></div>
+<div class="modal" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const STORE_KEY = 'forge_v1';
+
+/* ============================================================
+   DONNÉES : groupes, exercices, programme, badges
+   ============================================================ */
+const GROUPS = {
+  pecs:    { label: 'Pecs',    color: 'var(--push)',    bg: 'rgba(255,107,53,0.15)' },
+  dos:     { label: 'Dos',     color: 'var(--pull)',    bg: 'rgba(79,168,216,0.15)' },
+  epaules: { label: 'Épaules', color: 'var(--epaules)', bg: 'rgba(199,125,255,0.15)' },
+  biceps:  { label: 'Biceps',  color: 'var(--biceps)',  bg: 'rgba(242,84,91,0.15)' },
+  triceps: { label: 'Triceps', color: 'var(--triceps)', bg: 'rgba(244,162,89,0.15)' },
+  abs:     { label: 'Abdos',   color: 'var(--abs)',     bg: 'rgba(224,184,79,0.15)' },
+  cardio:  { label: 'Cardio',  color: 'var(--cardio)',  bg: 'rgba(111,207,151,0.15)' },
+};
+
+function defaultExercises() {
+  return [
+    { id:'pompes', name:'Pompes', group:'pecs', mode:'reps',
+      desc:"Mains à plat sur la planche à pompe, corps aligné tête-bassin-talons, coudes à 45° du buste.",
+      tier:0, extraProgress:0, maxTarget:14, tiers:[
+        { name:'Standard', sets:3, target:12, rest:75 },
+        { name:'Diamant', sets:3, target:10, rest:75 },
+        { name:'Déclinées', sets:3, target:10, rest:90 },
+        { name:'Archer', sets:3, target:6, rest:90 },
+      ]},
+    { id:'kb_floor_press', name:'Développé kettlebell', group:'pecs', mode:'reps',
+      desc:"Allongé au sol, kettlebell à bout de bras, descente jusqu'à ce que le triceps touche le sol.",
+      tier:0, extraProgress:0, maxTarget:20, tiers:[
+        { name:'2 mains alterné', sets:3, target:10, rest:60 },
+        { name:'Unilatéral', sets:3, target:8, rest:75 },
+        { name:'Tempo lent (3s descente)', sets:3, target:8, rest:75 },
+      ]},
+    { id:'kb_pullover', name:'Pull-over kettlebell', group:'pecs', mode:'reps',
+      desc:"Allongé, kettlebell tenu à deux mains au-dessus de la poitrine, descente en arc derrière la tête puis retour — étire pecs et dorsaux.",
+      tier:0, extraProgress:0, maxTarget:18, tiers:[
+        { name:'Standard', sets:3, target:10, rest:75 },
+        { name:'Tempo lent', sets:3, target:8, rest:75 },
+      ]},
+    { id:'dips', name:'Dips', group:'triceps', mode:'reps',
+      desc:"Sur les barres de la chaise romaine, buste droit (pas penché) pour isoler le triceps, descente contrôlée à 90° de coude.",
+      tier:1, extraProgress:0, maxTarget:15, tiers:[
+        { name:'Amplitude partielle', sets:3, target:8, rest:75 },
+        { name:'Complets', sets:3, target:8, rest:90 },
+        { name:'Complets +', sets:3, target:12, rest:90 },
+        { name:'Lestés (kettlebell)', sets:3, target:6, rest:120 },
+      ]},
+    { id:'kb_triceps_ext', name:'Extension triceps kettlebell', group:'triceps', mode:'reps',
+      desc:"Kettlebell tenu à deux mains derrière la tête, coudes fixes pointés au plafond, extension complète des avant-bras.",
+      tier:0, extraProgress:0, maxTarget:18, tiers:[
+        { name:'Standard', sets:3, target:10, rest:60 },
+        { name:'Tempo lent', sets:3, target:10, rest:60 },
+      ]},
+    { id:'tractions_pronation', name:'Tractions pronation', group:'dos', mode:'reps',
+      desc:"Prise large, paumes vers l'avant, menton au-dessus de la barre, descente complète bras tendus.",
+      tier:0, extraProgress:0, maxTarget:12, tiers:[
+        { name:'Complètes', sets:3, target:2, rest:120 },
+        { name:'Complètes +', sets:4, target:6, rest:120 },
+        { name:'Lestées légères', sets:3, target:5, rest:150 },
+        { name:'Lestées', sets:3, target:8, rest:150 },
+      ]},
+    { id:'kb_row', name:'Rowing kettlebell', group:'dos', mode:'reps',
+      desc:"Buste penché, un genou et une main en appui, tirer le kettlebell vers la hanche.",
+      tier:0, extraProgress:0, maxTarget:20, tiers:[
+        { name:'Standard', sets:3, target:10, rest:60 },
+        { name:'Tempo lent', sets:3, target:10, rest:60 },
+      ]},
+    { id:'kb_deadlift', name:'Soulevé de terre kettlebell', group:'dos', mode:'reps',
+      desc:"Kettlebell entre les jambes, dos plat, redressement en poussant sur les talons — bas du dos et chaîne postérieure.",
+      tier:0, extraProgress:0, maxTarget:25, tiers:[
+        { name:'Standard', sets:3, target:12, rest:75 },
+        { name:'Tempo lent', sets:3, target:10, rest:75 },
+      ]},
+    { id:'ball_back_ext', name:'Extension dos sur ballon', group:'dos', mode:'reps',
+      desc:"Bassin posé sur le ballon, pieds calés contre un mur, relever le buste sans cambrer — lombaires et dorsaux.",
+      tier:0, extraProgress:0, maxTarget:20, tiers:[
+        { name:'Standard', sets:3, target:12, rest:60 },
+        { name:'Tempo lent + pause 2s', sets:3, target:10, rest:60 },
+      ]},
+    { id:'tractions_supination', name:'Tractions supination', group:'biceps', mode:'reps',
+      desc:"Prise serrée, paumes vers soi — sollicite davantage les biceps que la version pronation.",
+      tier:0, extraProgress:0, maxTarget:12, tiers:[
+        { name:'Complètes', sets:3, target:5, rest:100 },
+        { name:'Complètes +', sets:4, target:8, rest:100 },
+        { name:'Lestées', sets:3, target:6, rest:150 },
+      ]},
+    { id:'kb_curl', name:'Curl biceps kettlebell', group:'biceps', mode:'reps',
+      desc:"Debout, kettlebell en prise neutre, fléchir les coudes pour amener la boule vers les épaules sans balancer le buste.",
+      tier:0, extraProgress:0, maxTarget:18, tiers:[
+        { name:'Standard', sets:3, target:12, rest:60 },
+        { name:'Tempo lent', sets:3, target:10, rest:60 },
+      ]},
+    { id:'kb_arnold', name:'Arnold press', group:'epaules', mode:'reps',
+      desc:"Kettlebell devant l'épaule, rotation du poignet en poussant vers le haut.",
+      tier:0, extraProgress:0, maxTarget:15, tiers:[
+        { name:'Standard', sets:3, target:8, rest:75 },
+        { name:'Tempo lent', sets:3, target:8, rest:75 },
+      ]},
+    { id:'kb_lateral_raise', name:'Élévations latérales kettlebell', group:'epaules', mode:'reps',
+      desc:"Bras tendus le long du corps, lever le kettlebell sur le côté jusqu'à hauteur d'épaule, coude légèrement fléchi.",
+      tier:0, extraProgress:0, maxTarget:18, tiers:[
+        { name:'Standard', sets:3, target:12, rest:60 },
+        { name:'Tempo lent', sets:3, target:10, rest:60 },
+      ]},
+    { id:'kb_upright_row', name:'Tirage menton kettlebell', group:'epaules', mode:'reps',
+      desc:"Kettlebell tenu à deux mains devant les cuisses, tirer verticalement jusqu'au menton, coudes hauts.",
+      tier:0, extraProgress:0, maxTarget:15, tiers:[
+        { name:'Standard', sets:3, target:10, rest:60 },
+        { name:'Tempo lent', sets:3, target:10, rest:60 },
+      ]},
+    { id:'releves_jambes', name:'Relevés de jambes', group:'abs', mode:'reps',
+      desc:"Suspendu à la barre, remonter les jambes sans élan, contrôler la descente.",
+      tier:0, extraProgress:0, maxTarget:15, tiers:[
+        { name:'Genoux repliés', sets:3, target:12, rest:60 },
+        { name:'Jambes tendues', sets:3, target:10, rest:60 },
+        { name:'Toes to bar', sets:3, target:8, rest:75 },
+      ]},
+    { id:'gainage_planche', name:'Gainage planche', group:'abs', mode:'time',
+      desc:"Corps aligné, appui avant-bras, abdos et fessiers contractés.",
+      tier:0, extraProgress:0, maxTarget:180, tiers:[
+        { name:'45 secondes', sets:3, target:45, rest:45 },
+        { name:'60 secondes', sets:3, target:60, rest:45 },
+        { name:'90 secondes', sets:3, target:90, rest:60 },
+      ]},
+    { id:'gainage_ballon', name:'Mountain climbers ballon', group:'abs', mode:'reps',
+      desc:"Mains sur le ballon de stabilité, pieds au sol, ramener les genoux vers la poitrine alternativement.",
+      tier:0, extraProgress:0, maxTarget:40, tiers:[
+        { name:'Standard', sets:3, target:20, rest:45 },
+        { name:'Rapide', sets:3, target:30, rest:45 },
+      ]},
+    { id:'lsit', name:'L-sit', group:'abs', mode:'time',
+      desc:"Jambes tendues à l'horizontale, appui sur les mains, gainage complet.",
+      tier:0, extraProgress:0, maxTarget:60, tiers:[
+        { name:'Tucked assis au sol', sets:3, target:15, rest:60 },
+        { name:'Suspendu genoux pliés', sets:3, target:10, rest:75 },
+        { name:'Jambes tendues', sets:3, target:8, rest:90 },
+      ]},
+    { id:'ball_pike', name:'Pike sur ballon', group:'abs', mode:'reps',
+      desc:"Position de planche, pieds sur le ballon, lever les hanches vers le plafond en roulant le ballon vers les mains.",
+      tier:0, extraProgress:0, maxTarget:18, tiers:[
+        { name:'Standard', sets:3, target:10, rest:60 },
+        { name:'Tempo lent', sets:3, target:8, rest:60 },
+      ]},
+    { id:'ball_rollout', name:'Rollout ballon', group:'abs', mode:'reps',
+      desc:"À genoux, avant-bras sur le ballon, rouler vers l'avant en gardant le dos plat puis revenir.",
+      tier:0, extraProgress:0, maxTarget:15, tiers:[
+        { name:'Amplitude courte', sets:3, target:10, rest:60 },
+        { name:'Amplitude complète', sets:3, target:8, rest:60 },
+      ]},
+    { id:'ball_russian_twist', name:'Russian twist assis sur ballon', group:'abs', mode:'reps',
+      desc:"Assis sur le ballon, buste incliné à 45°, pieds ancrés, rotation lente du buste d'un côté à l'autre.",
+      tier:0, extraProgress:0, maxTarget:40, tiers:[
+        { name:'Standard', sets:3, target:20, rest:45 },
+        { name:'Avec kettlebell', sets:3, target:16, rest:45 },
+      ]},
+  ];
+}
+
+const PROGRAM = [
+  { id:'pecs_triceps', name:'Pecs + Triceps', color:'var(--push)', bg:'rgba(255,107,53,0.15)',
+    blocks:[
+      { group:'pecs', pool:['pompes','kb_floor_press','kb_pullover'], pick:2 },
+      { group:'triceps', pool:['dips','kb_triceps_ext'], pick:2 },
+    ]},
+  { id:'dos_biceps', name:'Dos + Biceps', color:'var(--pull)', bg:'rgba(79,168,216,0.15)',
+    blocks:[
+      { group:'dos', pool:['tractions_pronation','kb_row','kb_deadlift'], pick:2 },
+      { group:'biceps', pool:['tractions_supination','kb_curl'], pick:2 },
+    ]},
+  { id:'epaules_abdos', name:'Épaules + Abdos', color:'var(--epaules)', bg:'rgba(199,125,255,0.15)',
+    blocks:[
+      { group:'epaules', pool:['kb_arnold','kb_lateral_raise','kb_upright_row'], pick:2 },
+      { group:'abs', pool:['releves_jambes','gainage_planche','gainage_ballon','lsit','ball_pike','ball_rollout','ball_russian_twist'], pick:3 },
+    ]},
+];
+
+// pioche les exercices du jour pour un programme donné, en tournant dans chaque pool
+// à chaque fois que ce programme est complété (voir finishSession) — assure la variété
+function pickFromPool(progId, block) {
+  const key = progId + ':' + block.group;
+  const offset = (S.poolOffset && S.poolOffset[key]) || 0;
+  const n = Math.min(block.pick, block.pool.length);
+  const picked = [];
+  for (let i = 0; i < n; i++) picked.push(block.pool[(offset + i) % block.pool.length]);
+  return picked;
+}
+function buildProgramExerciseIds(prog) {
+  return prog.blocks.reduce((acc, b) => acc.concat(pickFromPool(prog.id, b)), []);
+}
+function lastDoneLabel(progId) {
+  const d = S.lastDoneByProgram && S.lastDoneByProgram[progId];
+  if (!d) return 'Jamais faite';
+  const [y,m,day] = d.split('-');
+  return `Dernière fois : ${day}/${m}/${y}`;
+}
+function recommendedProgramId() {
+  let best = null, bestDate = null;
+  PROGRAM.forEach(p => {
+    const d = (S.lastDoneByProgram && S.lastDoneByProgram[p.id]) || '';
+    if (best === null || d < bestDate) { best = p.id; bestDate = d; }
+  });
+  return best;
+}
+
+const BADGES = [
+  { id:'pompes_1000', label:'1000 pompes', sub:'ce mois-ci', mark:'💪',
+    check: s => (s.monthReps.pompes||0) >= 1000 },
+  { id:'tractions_200', label:'200 tractions', sub:'ce mois-ci', mark:'🔥',
+    check: s => (s.monthReps.tractions_pronation||0) + (s.monthReps.tractions_supination||0) >= 200 },
+  { id:'10_seances', label:'10 séances', sub:'ce mois-ci', mark:'📅',
+    check: s => s.monthSessions >= 10 },
+  { id:'streak_4', label:'4 séances', sub:"d'affilée sans coupure", mark:'⚡',
+    check: s => s.streak >= 4 },
+  { id:'streak_8', label:'8 séances', sub:"d'affilée sans coupure", mark:'⚡',
+    check: s => s.streak >= 8 },
+  { id:'bras_300', label:'300 reps bras', sub:'biceps + triceps, ce mois-ci', mark:'💥',
+    check: s => (s.monthReps.tractions_supination||0) + (s.monthReps.kb_curl||0) + (s.monthReps.dips||0) + (s.monthReps.kb_triceps_ext||0) >= 300 },
+  { id:'epaules_300', label:'300 reps épaules', sub:'ce mois-ci', mark:'🗿',
+    check: s => (s.monthReps.kb_arnold||0) + (s.monthReps.kb_lateral_raise||0) + (s.monthReps.kb_upright_row||0) >= 300 },
+  { id:'total_50', label:'50 séances', sub:'depuis le début', mark:'🏆',
+    check: s => s.totalSessions >= 50 },
+];
+
+const WARMUP_EX = { id:'warmup_bike', name:'Vélo — échauffement', group:'cardio', mode:'time', tier:0,
+  desc:"Rythme tranquille, juste de quoi faire monter la température corporelle avant la séance.",
+  tiers:[{ name:'Échauffement', sets:1, target:360, rest:0 }] };
+
+/* ============================================================
+   ÉTAT
+   ============================================================ */
+function defaultState() {
+  return {
+    exercises: defaultExercises(),
+    history: [],       // {date, exId, group, mode, tierName, sets:[num,...]}
+    cardioLog: [],      // {date, type:'echauffement'|'libre', minutes}
+    poolOffset: {},      // {"progId:group": offset} — fait tourner les exercices piochés
+    lastDoneByProgram: {}, // {progId: 'YYYY-MM-DD'}
+    badgesUnlocked: [],
+    pendingUpgrades: {},
+  };
+}
+let S = defaultState();
+
+function mergeExercises(savedExs) {
+  const base = defaultExercises();
+  if (!savedExs || !savedExs.length) return base;
+  const savedMap = {};
+  savedExs.forEach(e => { savedMap[e.id] = e; });
+  return base.map(e => {
+    const prev = savedMap[e.id];
+    if (!prev) return e;
+    const patch = {};
+    if (typeof prev.tier === 'number') patch.tier = Math.min(prev.tier, e.tiers.length - 1);
+    if (typeof prev.extraProgress === 'number') patch.extraProgress = prev.extraProgress;
+    return Object.keys(patch).length ? Object.assign({}, e, patch) : e;
+  });
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    const base = defaultState();
+    S = Object.assign(base, saved);
+    S.exercises = mergeExercises(saved.exercises);
+    if (!S.pendingUpgrades) S.pendingUpgrades = {};
+  } catch(e) { console.error('load error', e); }
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) { console.error('save error', e); }
+}
+function exById(id) { return S.exercises.find(e => e.id === id) || (id === 'warmup_bike' ? WARMUP_EX : null); }
+
+// objectif effectif du palier courant : si on est au dernier palier nommé et qu'il est
+// maîtrisé, l'objectif continue de grimper (par pas de +2 reps / +10s) jusqu'au plafond
+// raisonnable de l'exercice (maxTarget) — au-delà, plus aucune suggestion n'est faite.
+function progressionStep(ex) { return ex.mode === 'time' ? 10 : 2; }
+function currentTarget(ex) {
+  const last = ex.tiers[ex.tiers.length - 1];
+  if (ex.tier < ex.tiers.length - 1) return ex.tiers[ex.tier].target;
+  const step = progressionStep(ex);
+  const raw = last.target + (ex.extraProgress || 0) * step;
+  return ex.maxTarget ? Math.min(raw, ex.maxTarget) : raw;
+}
+function isAtMax(ex) {
+  return ex.tier >= ex.tiers.length - 1 && ex.maxTarget && currentTarget(ex) >= ex.maxTarget;
+}
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function haptic() { if (navigator.vibrate) navigator.vibrate(12); }
+
+/* ============================================================
+   AUDIO — bip de fin de timer (Web Audio API, pas de fichier externe)
+   ============================================================ */
+let audioCtx = null;
+function beep(times = 2) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    for (let i = 0; i < times; i++) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type = 'sine'; osc.frequency.value = 880;
+      const start = audioCtx.currentTime + i * 0.35;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.4, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+      osc.start(start); osc.stop(start + 0.3);
+    }
+  } catch(e) { console.error('beep error', e); }
+  haptic();
+}
+
+/* ============================================================
+   STATS / BADGES
+   ============================================================ */
+function computeStats(period) {
+  const now = new Date();
+  const cutoff = new Date(now);
+  if (period === 'week') cutoff.setDate(now.getDate() - 7);
+  else cutoff.setDate(now.getDate() - 30);
+
+  const inRange = h => new Date(h.date) >= cutoff;
+  const entries = S.history.filter(inRange);
+
+  const repsByGroup = { pecs:0, dos:0, epaules:0, biceps:0, triceps:0, abs:0 };
+  const repsByEx = {};
+  entries.forEach(h => {
+    const sum = (h.sets || []).reduce((a,b) => a + b, 0);
+    if (repsByGroup[h.group] !== undefined) repsByGroup[h.group] += sum;
+    repsByEx[h.exId] = (repsByEx[h.exId] || 0) + sum;
+  });
+
+  const sessionDates = [...new Set(entries.map(h => h.date))];
+  const cardioMin = S.cardioLog.filter(inRange).reduce((a,c) => a + (c.minutes||0), 0);
+  const totalSessions = new Set(S.history.map(h => h.date)).size;
+
+  // pour badges : toujours calculés sur le mois calendaire en cours
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEntries = S.history.filter(h => new Date(h.date) >= monthStart);
+  const monthReps = {};
+  monthEntries.forEach(h => {
+    const sum = (h.sets || []).reduce((a,b) => a + b, 0);
+    monthReps[h.exId] = (monthReps[h.exId] || 0) + sum;
+  });
+  const monthSessions = new Set(monthEntries.map(h => h.date)).size;
+  const streak = computeStreak();
+
+  return { repsByGroup, repsByEx, sessionsCount: sessionDates.length, cardioMin, totalSessions,
+    monthReps, monthSessions, streak, dailyVolume: dailyVolume(period, entries) };
+}
+
+function computeStreak() {
+  const dates = [...new Set(S.history.map(h => h.date))].sort().reverse();
+  if (!dates.length) return 0;
+  let streak = 1;
+  for (let i = 0; i < dates.length - 1; i++) {
+    const d1 = new Date(dates[i]), d2 = new Date(dates[i+1]);
+    const diffDays = Math.round((d1 - d2) / 86400000);
+    if (diffDays <= 3) streak++; else break; // tolérance de 2 jours off entre séances
+  }
+  return streak;
+}
+
+function dailyVolume(period, entries) {
+  const days = period === 'week' ? 7 : 30;
+  const buckets = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const vol = entries.filter(h => h.date === key)
+      .reduce((a,h) => a + (h.sets||[]).reduce((x,y)=>x+y,0), 0);
+    buckets.push({ key, label: d.getDate() + '/' + (d.getMonth()+1), vol });
+  }
+  return buckets;
+}
+
+function checkBadges(stats) {
+  const newly = [];
+  BADGES.forEach(b => {
+    const unlocked = S.badgesUnlocked.includes(b.id);
+    if (!unlocked && b.check(stats)) {
+      S.badgesUnlocked.push(b.id);
+      newly.push(b);
+    }
+  });
+  if (newly.length) save();
+  return newly;
+}
+
+/* ============================================================
+   NAVIGATION PRINCIPALE
+   ============================================================ */
+let view = 'home';
+let libGroup = 'push';
+let statPeriod = 'week';
+
+function renderShell() {
+  const app = $('app');
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="topbar-title">FORGE</div>
+      <div class="streak-pill" id="streakPill">🔥 <span id="streakVal">0</span></div>
+    </div>
+    <div class="screen scrollable active" id="content-screen"><div class="content" id="content"></div></div>
+    <div class="navbar">
+      <div class="nav-btn" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Accueil</span>
+      </div>
+      <div class="nav-btn" data-view="library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 20V4M6 4h11a2 2 0 012 2v12a2 2 0 01-2 2H6"/></svg>
+        <span>Exercices</span>
+      </div>
+      <div class="nav-btn" data-view="stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        <span>Suivi</span>
+      </div>
+      <div class="nav-btn" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Réglages</span>
+      </div>
+    </div>
+  `;
+  app.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; renderView(); }));
+  $('streakVal').textContent = computeStreak();
+}
+
+function renderView() {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  const c = $('content');
+  if (view === 'home') renderHome(c);
+  else if (view === 'library') renderLibrary(c);
+  else if (view === 'stats') renderStats(c);
+  else if (view === 'settings') renderSettings(c);
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome(c) {
+  const recoId = recommendedProgramId();
+  const stats = computeStats('month');
+
+  let html = `<div class="section-label" style="margin-top:0;">Propositions de séance</div>`;
+  PROGRAM.forEach(prog => {
+    const exIds = buildProgramExerciseIds(prog);
+    const totalSets = exIds.reduce((a,id) => { const ex = exById(id); return a + (ex.tiers[ex.tier].sets || 0); }, 0);
+    const isReco = prog.id === recoId;
+    html += `
+      <div class="today-card prog-card ${isReco ? 'reco' : ''}" data-prog="${prog.id}" style="margin-bottom:12px; ${isReco ? '' : 'padding:18px;'}">
+        ${isReco ? `<div class="today-eyebrow" style="color:var(--success);">✓ Séance conseillée</div>` : `<div class="today-eyebrow" style="color:${prog.color};">Autre séance possible</div>`}
+        <div class="${isReco ? 'today-title' : 'prog-title-alt'}">${escapeHtml(prog.name)}</div>
+        <div class="today-sub">${exIds.length} exercices · ${totalSets} séries${isReco ? ' · échauffement vélo inclus' : ''}</div>
+        <div class="prog-lastdone">${escapeHtml(lastDoneLabel(prog.id))}</div>
+        <div class="${isReco ? 'today-btn' : 'today-btn secondary'}" data-start="${prog.id}" style="margin-top:12px;">Commencer${isReco ? ' la séance' : ''}</div>
+      </div>`;
+  });
+
+  html += `
+    <div class="cardio-mini" id="cardioFreeBtn">
+      <div class="cardio-mini-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h4l4 8M10 9l2-3"/></svg></div>
+      <div><div class="cardio-mini-name">Cardio libre</div><div class="cardio-mini-desc">Vélo tranquille, 20-30 min</div></div>
+      <div class="cardio-mini-arrow">→</div>
+    </div>`;
+
+  html += `<div class="section-label">Badges</div><div class="badge-row">`;
+  BADGES.forEach(b => {
+    const unlocked = S.badgesUnlocked.includes(b.id) || b.check(stats);
+    html += `<div class="badge-chip ${unlocked ? '' : 'locked'}"><div class="badge-chip-mark">${b.mark}</div><div class="badge-chip-label">${escapeHtml(b.label)}</div></div>`;
+  });
+  html += `</div>`;
+
+  c.innerHTML = html;
+  c.querySelectorAll('[data-start]').forEach(btn => btn.addEventListener('click', () => startSession(btn.dataset.start)));
+  $('cardioFreeBtn').addEventListener('click', startFreeCardio);
+}
+
+/* ============================================================
+   BIBLIOTHÈQUE D'EXERCICES
+   ============================================================ */
+function renderLibrary(c) {
+  let html = `<div class="group-tabs">`;
+  Object.keys(GROUPS).forEach(g => {
+    html += `<div class="group-tab ${g===libGroup?'active':''}" data-g="${g}">${GROUPS[g].label}</div>`;
+  });
+  html += `</div><div id="libList"></div>`;
+  c.innerHTML = html;
+  c.querySelectorAll('.group-tab').forEach(t => t.addEventListener('click', () => { libGroup = t.dataset.g; renderLibrary(c); }));
+  renderLibList();
+}
+function renderLibList() {
+  const list = $('libList');
+  const exs = S.exercises.filter(e => e.group === libGroup);
+  if (!exs.length) { list.innerHTML = `<div class="empty">Le vélo n'a pas de fiche dédiée — il sert à l'échauffement et au cardio libre.</div>`; return; }
+  list.innerHTML = exs.map(ex => {
+    const t = ex.tiers[ex.tier];
+    const eff = currentTarget(ex);
+    const target = ex.mode === 'time' ? `${t.sets}×${eff}s` : `${t.sets}×${eff} reps`;
+    const maxTag = isAtMax(ex) ? ' · plafond atteint' : '';
+    return `
+      <div class="ex-card" style="border-left-color:${GROUPS[ex.group].color}" data-id="${ex.id}">
+        <div class="ex-card-top"><div class="ex-name">${escapeHtml(ex.name)}</div><div class="ex-tier">${escapeHtml(t.name)}</div></div>
+        <div class="ex-desc">${escapeHtml(ex.desc)}</div>
+        <div class="ex-target">Objectif : ${target}${maxTag}</div>
+      </div>`;
+  }).join('');
+  list.querySelectorAll('.ex-card').forEach(card => card.addEventListener('click', () => openExerciseModal(card.dataset.id)));
+}
+
+function openExerciseModal(exId) {
+  const ex = exById(exId);
+  const modal = $('modal');
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">${escapeHtml(ex.name)}</h3>
+      <p class="modal-text">${escapeHtml(ex.desc)}</p>
+      <div class="section-label" style="margin-top:0;">Paliers</div>
+      <div id="tierList"></div>
+    </div>`;
+  const tierList = modal.querySelector('#tierList');
+  tierList.innerHTML = ex.tiers.map((t, i) => {
+    const isLast = i === ex.tiers.length - 1;
+    const displayTarget = isLast ? currentTarget(ex) : t.target;
+    return `
+    <div class="modal-btn ${i===ex.tier?'primary':''}" data-i="${i}" style="text-align:left; display:flex; justify-content:space-between; align-items:center;">
+      <span>${escapeHtml(t.name)}</span>
+      <span style="opacity:0.75; font-size:12px;">${ex.mode==='time' ? t.sets+'×'+displayTarget+'s' : t.sets+'×'+displayTarget}${isLast && isAtMax(ex) ? ' (max)' : ''}</span>
+    </div>`;
+  }).join('');
+  if (isAtMax(ex)) {
+    tierList.innerHTML += `<div class="modal-text" style="margin-top:10px; margin-bottom:0;">Plafond atteint avec ton matériel actuel — pour aller plus loin sur cet exercice, il faudrait ajouter de la charge ou une variante plus difficile.</div>`;
+  }
+  tierList.querySelectorAll('.modal-btn').forEach(btn => btn.addEventListener('click', () => {
+    ex.tier = parseInt(btn.dataset.i, 10);
+    save();
+    modal.classList.remove('show');
+    toast('Palier mis à jour');
+    if (view === 'library') renderLibList();
+  }));
+  modal.classList.add('show');
+}
+
+/* ============================================================
+   SUIVI / STATS
+   ============================================================ */
+function renderStats(c) {
+  const stats = computeStats(statPeriod);
+  let html = `
+    <div class="period-toggle">
+      <div class="period-opt ${statPeriod==='week'?'active':''}" data-p="week">Semaine</div>
+      <div class="period-opt ${statPeriod==='month'?'active':''}" data-p="month">Mois</div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.pecs.color}">${stats.repsByGroup.pecs}</div><div class="stat-box-label">Pecs</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.dos.color}">${stats.repsByGroup.dos}</div><div class="stat-box-label">Dos</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.epaules.color}">${stats.repsByGroup.epaules}</div><div class="stat-box-label">Épaules</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.biceps.color}">${stats.repsByGroup.biceps}</div><div class="stat-box-label">Biceps</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.triceps.color}">${stats.repsByGroup.triceps}</div><div class="stat-box-label">Triceps</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:${GROUPS.abs.color}">${stats.repsByGroup.abs}</div><div class="stat-box-label">Abdos</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-box-num">${stats.sessionsCount}</div><div class="stat-box-label">Séances</div></div>
+      <div class="stat-box"><div class="stat-box-num" style="color:var(--cardio)">${stats.cardioMin}</div><div class="stat-box-label">Min. cardio</div></div>
+      <div class="stat-box"><div class="stat-box-num">${stats.streak}</div><div class="stat-box-label">Séances d'affilée</div></div>
+      <div class="stat-box"><div class="stat-box-num">${stats.totalSessions}</div><div class="stat-box-label">Total depuis le début</div></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Volume total (reps + secondes) par jour</div>
+      <div class="bar-row" id="volChart"></div>
+    </div>
+    <div class="section-label">Badges</div>
+    <div class="badge-grid" id="badgeGrid"></div>
+  `;
+  c.innerHTML = html;
+  c.querySelectorAll('.period-opt').forEach(p => p.addEventListener('click', () => { statPeriod = p.dataset.p; renderStats(c); }));
+
+  const maxVol = Math.max(1, ...stats.dailyVolume.map(d => d.vol));
+  const chart = $('volChart');
+  chart.innerHTML = stats.dailyVolume.map(d => `
+    <div class="bar-col">
+      <div class="bar-fill" style="height:${Math.max(3, d.vol/maxVol*90)}px; background:${d.vol>0?'var(--ember)':'var(--surface-3)'};"></div>
+      <div class="bar-tick">${d.label}</div>
+    </div>`).join('');
+
+  const grid = $('badgeGrid');
+  grid.innerHTML = BADGES.map(b => {
+    const unlocked = S.badgesUnlocked.includes(b.id) || b.check(stats);
+    return `<div class="badge-card ${unlocked?'':'locked'}"><div class="badge-card-mark">${b.mark}</div><div class="badge-card-label">${escapeHtml(b.label)}</div><div class="badge-card-sub">${escapeHtml(b.sub)}</div></div>`;
+  }).join('');
+
+  checkBadges(computeStats('month'));
+}
+
+/* ============================================================
+   RÉGLAGES
+   ============================================================ */
+function renderSettings(c) {
+  c.innerHTML = `
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-weight:700; margin-bottom:6px;">Sauvegarde</div>
+      <div style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px; line-height:1.5;">Le stockage est local à cet écran d'accueil / navigateur. Exporte régulièrement vers iCloud Drive pour ne rien perdre.</div>
+      <div class="today-btn" id="exportBtn" style="margin-bottom:10px;">Exporter mes données</div>
+      <div class="today-btn secondary" id="importBtn">Importer une sauvegarde</div>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:6px; color:var(--danger);">Réinitialiser</div>
+      <div style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;">Efface tout l'historique, les paliers et les badges. Irréversible.</div>
+      <div class="today-btn secondary" id="resetBtn" style="border-color:var(--danger); color:var(--danger);">Tout réinitialiser</div>
+    </div>
+  `;
+  $('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `forge-backup-${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Export généré');
+  });
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        S = Object.assign(defaultState(), data);
+        save(); toast('Import réussi'); renderShell(); renderView();
+      } catch(err) { toast('Fichier invalide'); }
+    };
+    reader.readAsText(file);
+  });
+  $('resetBtn').addEventListener('click', () => {
+    openConfirmModal('Tout réinitialiser ?', 'Historique, paliers et badges seront définitivement effacés.', () => {
+      S = defaultState(); save(); renderShell(); renderView(); toast('Données réinitialisées');
+    });
+  });
+}
+
+function openConfirmModal(title, text, onConfirm) {
+  const modal = $('modal');
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">${escapeHtml(title)}</h3>
+      <p class="modal-text">${escapeHtml(text)}</p>
+      <div class="modal-btn primary" id="confirmYes" style="background:var(--danger); border-color:var(--danger);">Confirmer</div>
+      <div class="modal-btn" id="confirmNo">Annuler</div>
+    </div>`;
+  modal.classList.add('show');
+  $('confirmYes').addEventListener('click', () => { modal.classList.remove('show'); onConfirm(); });
+  $('confirmNo').addEventListener('click', () => modal.classList.remove('show'));
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+/* ============================================================
+   SÉANCE GUIDÉE
+   ============================================================ */
+let sess = null;
+let timerHandle = null;
+
+function startSession(progId) {
+  const prog = PROGRAM.find(p => p.id === progId) || PROGRAM[0];
+  sess = {
+    prog,
+    exIds: ['warmup_bike', ...buildProgramExerciseIds(prog)],
+    exIdx: 0,
+    set: 0,
+    reps: 0,
+    results: {},
+    timeLeft: 0,
+    timerRunning: false,
+    timerPaused: false,
+    phase: 'exercise', // 'exercise' | 'rest'
+  };
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  buildSessionShell();
+  loadExerciseStep();
+}
+
+function buildSessionShell() {
+  const app = $('app');
+  app.innerHTML = `
+    <div class="screen active" id="sessionScreen" style="flex:1; display:flex; flex-direction:column;">
+      <div class="session-bar">
+        <div class="icon-btn" id="sessionExitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+        <div class="session-meta">
+          <div class="session-eyebrow" id="sessionEyebrow">Séance</div>
+          <div class="session-name" id="sessionName">—</div>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="sessionProgress" style="width:0%"></div></div>
+      <div class="ex-dots" id="exDots"></div>
+      <div class="session-area" id="sessionArea"></div>
+    </div>`;
+  $('sessionExitBtn').addEventListener('click', () => {
+    openConfirmModal('Quitter la séance ?', 'La progression de cette séance ne sera pas enregistrée.', () => {
+      clearInterval(timerHandle); sess = null; renderShell(); view = 'home'; renderView();
+    });
+  });
+}
+
+function renderExDots() {
+  const wrap = $('exDots');
+  wrap.innerHTML = sess.exIds.map((id, i) => {
+    const cls = i < sess.exIdx ? 'done' : (i === sess.exIdx ? 'current' : '');
+    return `<div class="ex-dot ${cls}"></div>`;
+  }).join('');
+  $('sessionProgress').style.width = Math.round((sess.exIdx / sess.exIds.length) * 100) + '%';
+}
+
+function currentSessionEx() { return exById(sess.exIds[sess.exIdx]); }
+
+function loadExerciseStep() {
+  clearInterval(timerHandle);
+  const ex = currentSessionEx();
+  const t = ex.tiers[ex.tier];
+  sess.set = 0;
+  sess.reps = currentTarget(ex);
+  sess.phase = 'exercise';
+  $('sessionEyebrow').textContent = sess.prog.name;
+  $('sessionName').textContent = ex.name;
+  renderExDots();
+  if (ex.mode === 'time') startExecTimer();
+  else renderExecReps();
+}
+
+function renderExecReps() {
+  const ex = currentSessionEx();
+  const t = ex.tiers[ex.tier];
+  const area = $('sessionArea');
+  const g = GROUPS[ex.group];
+  area.innerHTML = `
+    <div class="exec-card">
+      <div class="exec-group-tag" style="background:${g.bg}; color:${g.color}">${g.label}</div>
+      <div class="exec-name">${escapeHtml(ex.name)}</div>
+      <div class="exec-tier-name">${escapeHtml(t.name)} · série ${sess.set+1}/${t.sets}</div>
+      <div class="set-dots">${Array.from({length:t.sets}).map((_,i)=>`<div class="set-dot ${i<sess.set?'done':(i===sess.set?'current':'')}">${i+1}</div>`).join('')}</div>
+      <div class="reps-input-row">
+        <div class="reps-btn" id="repsMinus">−</div>
+        <div class="reps-val" id="repsVal">${sess.reps}</div>
+        <div class="reps-btn" id="repsPlus">+</div>
+      </div>
+      <div class="exec-btn" id="validateSetBtn">Valider la série</div>
+    </div>`;
+  $('repsMinus').addEventListener('click', () => { sess.reps = Math.max(0, sess.reps-1); $('repsVal').textContent = sess.reps; haptic(); });
+  $('repsPlus').addEventListener('click', () => { sess.reps++; $('repsVal').textContent = sess.reps; haptic(); });
+  $('validateSetBtn').addEventListener('click', () => logSet(sess.reps));
+}
+
+function startExecTimer() {
+  const ex = currentSessionEx();
+  const t = ex.tiers[ex.tier];
+  const target = currentTarget(ex);
+  sess.timeLeft = target;
+  sess.timerPaused = false;
+  sess.timerRunning = false;
+  const g = GROUPS[ex.group];
+  const area = $('sessionArea');
+  const R = 88, C = 2*Math.PI*R;
+  area.innerHTML = `
+    <div class="exec-card">
+      <div class="exec-group-tag" style="background:${g.bg}; color:${g.color}">${g.label}</div>
+      <div class="exec-name">${escapeHtml(ex.name)}</div>
+      <div class="exec-tier-name">${escapeHtml(t.name)} · série ${sess.set+1}/${t.sets}</div>
+      <div class="set-dots">${Array.from({length:t.sets}).map((_,i)=>`<div class="set-dot ${i<sess.set?'done':(i===sess.set?'current':'')}">${i+1}</div>`).join('')}</div>
+      <div class="timer-ring-wrap">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle class="timer-track" cx="100" cy="100" r="${R}"></circle>
+          <circle class="timer-fill" id="timerRing" cx="100" cy="100" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-center"><div class="timer-num" id="timerNum">${target}</div><div class="timer-label">secondes</div></div>
+      </div>
+      <div class="exec-btn" id="timerStartBtn">Lancer le chrono</div>
+    </div>`;
+  const ring = $('timerRing');
+  const btn = $('timerStartBtn');
+  const tick = () => {
+    if (sess.timerPaused) return;
+    sess.timeLeft--;
+    $('timerNum').textContent = Math.max(0, sess.timeLeft);
+    ring.style.strokeDashoffset = C * (1 - sess.timeLeft / target);
+    if (sess.timeLeft <= 0) {
+      clearInterval(timerHandle);
+      beep(3);
+      logSet(target);
+    }
+  };
+  btn.addEventListener('click', () => {
+    if (!sess.timerRunning) {
+      sess.timerRunning = true;
+      sess.timerPaused = false;
+      btn.textContent = 'Pause';
+      timerHandle = setInterval(tick, 1000);
+    } else {
+      sess.timerPaused = !sess.timerPaused;
+      btn.textContent = sess.timerPaused ? 'Reprendre' : 'Pause';
+      haptic();
+    }
+  });
+}
+
+function logSet(value) {
+  const ex = currentSessionEx();
+  const id = ex.id;
+  if (!sess.results[id]) sess.results[id] = { group: ex.group, mode: ex.mode, tierName: ex.tiers[ex.tier].name, sets: [] };
+  sess.results[id].sets.push(value);
+  const t = ex.tiers[ex.tier];
+  sess.set++;
+  haptic();
+  if (sess.set >= t.sets) {
+    // exercice terminé -> suivant
+    goToNextExercise();
+  } else {
+    // repos entre séries
+    if (t.rest > 0) startRest(t.rest, () => { ex.mode === 'time' ? startExecTimer() : renderExecReps(); });
+    else (ex.mode === 'time' ? startExecTimer() : renderExecReps());
+  }
+}
+
+function startRest(seconds, onDone) {
+  sess.phase = 'rest';
+  sess.timerPaused = false;
+  const area = $('sessionArea');
+  const R = 88, C = 2*Math.PI*R;
+  let left = seconds;
+  area.innerHTML = `
+    <div class="exec-card rest-screen">
+      <div class="exec-tier-name" style="margin-bottom:18px;">Repos</div>
+      <div class="timer-ring-wrap">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle class="timer-track" cx="100" cy="100" r="${R}"></circle>
+          <circle class="timer-fill" id="restRing" cx="100" cy="100" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-center"><div class="timer-num" id="restNum">${left}</div><div class="timer-label">secondes</div></div>
+      </div>
+      <div style="display:flex; gap:8px; max-width:340px; margin:0 auto;">
+        <div class="exec-btn ghost" id="pauseRestBtn" style="flex:1;">Pause</div>
+        <div class="exec-btn ghost" id="skipRestBtn" style="flex:1;">Passer</div>
+      </div>
+    </div>`;
+  const ring = $('restRing');
+  const finish = () => { clearInterval(timerHandle); beep(2); onDone(); };
+  timerHandle = setInterval(() => {
+    if (sess.timerPaused) return;
+    left--;
+    $('restNum').textContent = Math.max(0, left);
+    ring.style.strokeDashoffset = C * (1 - left / seconds);
+    if (left <= 0) finish();
+  }, 1000);
+  $('skipRestBtn').addEventListener('click', finish);
+  $('pauseRestBtn').addEventListener('click', () => {
+    sess.timerPaused = !sess.timerPaused;
+    $('pauseRestBtn').textContent = sess.timerPaused ? 'Reprendre' : 'Pause';
+    haptic();
+  });
+}
+
+function goToNextExercise() {
+  clearInterval(timerHandle);
+  sess.exIdx++;
+  if (sess.exIdx >= sess.exIds.length) { finishSession(); return; }
+  loadExerciseStep();
+}
+
+function finishSession() {
+  clearInterval(timerHandle);
+  const date = todayStr();
+  Object.keys(sess.results).forEach(exId => {
+    if (exId === 'warmup_bike') return; // loggé séparément en cardio
+    const r = sess.results[exId];
+    S.history.push({ date, exId, group: r.group, mode: r.mode, tierName: r.tierName, sets: r.sets });
+  });
+  if (sess.results['warmup_bike']) {
+    const secs = sess.results['warmup_bike'].sets.reduce((a,b)=>a+b,0);
+    S.cardioLog.push({ date, type: 'echauffement', minutes: Math.round(secs/60) });
+  }
+  S.lastDoneByProgram[sess.prog.id] = date;
+  sess.prog.blocks.forEach(b => {
+    const key = sess.prog.id + ':' + b.group;
+    const n = Math.min(b.pick, b.pool.length);
+    S.poolOffset[key] = ((S.poolOffset[key] || 0) + n) % b.pool.length;
+  });
+
+  const upgrades = detectUpgrades();
+  S.pendingUpgrades = {};
+  upgrades.forEach(u => S.pendingUpgrades[u.ex.id] = u.type === 'tier' ? { type:'tier', value:u.nextTier } : { type:'target', value:u.nextTarget });
+  save();
+
+  const stats = computeStats('month');
+  const newBadges = checkBadges(stats);
+
+  renderRecap(upgrades, newBadges);
+}
+
+function detectUpgrades() {
+  // si les 2 dernières séances loggées pour un exercice atteignent la cible sur toutes les
+  // séries -> proposer le palier nommé suivant, ou si on est déjà au dernier palier, faire
+  // grimper l'objectif numérique d'un cran (jusqu'au plafond maxTarget de l'exercice).
+  const upgrades = [];
+  Object.keys(sess.results).forEach(exId => {
+    if (exId === 'warmup_bike') return;
+    const ex = exById(exId);
+    const t = ex.tiers[ex.tier];
+    const target = currentTarget(ex);
+    const hist = S.history.filter(h => h.exId === exId).slice(-2);
+    if (hist.length < 2) return;
+    const allHit = hist.every(h => h.sets.length >= t.sets && h.sets.every(v => v >= target));
+    if (!allHit) return;
+    if (ex.tier < ex.tiers.length - 1) {
+      upgrades.push({ type:'tier', ex, nextTier: ex.tier + 1 });
+    } else if (!isAtMax(ex)) {
+      const step = progressionStep(ex);
+      const nextTarget = Math.min(target + step, ex.maxTarget || (target + step));
+      if (nextTarget > target) upgrades.push({ type:'target', ex, nextTarget });
+    }
+  });
+  return upgrades;
+}
+
+function renderRecap(upgrades, newBadges) {
+  const area = $('sessionArea');
+  $('sessionProgress').style.width = '100%';
+  $('exDots').innerHTML = '';
+  $('sessionName').textContent = 'Séance terminée';
+  let upgradesHtml = '';
+  if (upgrades.length) {
+    upgradesHtml = `<div class="section-label" style="text-align:left;">Progression débloquée</div>` +
+      upgrades.map(u => {
+        const readyLabel = u.type === 'tier'
+          ? `Prêt pour : <b>${escapeHtml(u.ex.tiers[u.nextTier].name)}</b>`
+          : `Prêt pour : <b>${u.nextTarget}${u.ex.mode === 'time' ? 's' : ' reps'}</b> par série`;
+        return `
+        <div class="ex-card" style="border-left-color:var(--success); text-align:left;">
+          <div class="ex-card-top"><div class="ex-name">${escapeHtml(u.ex.name)}</div></div>
+          <div class="ex-desc">${readyLabel}</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <div class="exec-btn" style="padding:10px; font-size:13px; flex:1;" data-accept="${u.ex.id}">${u.type==='tier' ? 'Passer au palier' : "Monter l'objectif"}</div>
+            <div class="exec-btn ghost" style="padding:10px; font-size:13px; flex:1;" data-decline="${u.ex.id}">Plus tard</div>
+          </div>
+        </div>`;
+      }).join('');
+  }
+  let badgesHtml = '';
+  if (newBadges.length) {
+    badgesHtml = `<div class="section-label" style="text-align:left;">Badges débloqués</div><div class="badge-row">` +
+      newBadges.map(b => `<div class="badge-chip"><div class="badge-chip-mark">${b.mark}</div><div class="badge-chip-label">${escapeHtml(b.label)}</div></div>`).join('') + `</div>`;
+  }
+  area.innerHTML = `
+    <div class="exec-card" style="max-width:420px;">
+      <div style="font-size:44px; margin-bottom:8px;">🏁</div>
+      <div class="exec-name" style="font-size:30px;">Bien joué</div>
+      <div class="exec-tier-name" style="margin-bottom:20px;">Séance enregistrée dans le suivi.</div>
+      ${badgesHtml}
+      ${upgradesHtml}
+      <div class="exec-btn" id="backHomeBtn" style="margin-top:18px;">Retour à l'accueil</div>
+    </div>`;
+  area.querySelectorAll('[data-accept]').forEach(b => b.addEventListener('click', () => {
+    const ex = exById(b.dataset.accept);
+    const pending = S.pendingUpgrades[ex.id];
+    if (pending) {
+      if (pending.type === 'tier') ex.tier = pending.value;
+      else ex.extraProgress = (ex.extraProgress || 0) + 1;
+    }
+    delete S.pendingUpgrades[ex.id];
+    save(); toast(pending && pending.type === 'tier' ? 'Palier mis à jour' : 'Objectif augmenté');
+    b.closest('.ex-card').style.opacity = '0.4';
+  }));
+  area.querySelectorAll('[data-decline]').forEach(b => b.addEventListener('click', () => {
+    delete S.pendingUpgrades[b.dataset.decline];
+    save();
+    b.closest('.ex-card').style.opacity = '0.4';
+  }));
+  $('backHomeBtn').addEventListener('click', () => { sess = null; renderShell(); view = 'home'; renderView(); });
+}
+
+/* ============================================================
+   CARDIO LIBRE (hors séance)
+   ============================================================ */
+function startFreeCardio() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const app = $('app');
+  let minutes = 25;
+  app.innerHTML = `
+    <div class="screen active" style="flex:1; display:flex; flex-direction:column;">
+      <div class="session-bar">
+        <div class="icon-btn" id="cardioExitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+        <div class="session-meta"><div class="session-eyebrow">Cardio libre</div><div class="session-name">Vélo d'appartement</div></div>
+      </div>
+      <div class="session-area" id="cardioArea"></div>
+    </div>`;
+  $('cardioExitBtn').addEventListener('click', () => { clearInterval(timerHandle); renderShell(); view = 'home'; renderView(); });
+
+  function renderPicker() {
+    $('cardioArea').innerHTML = `
+      <div class="exec-card">
+        <div class="exec-name" style="font-size:30px;">Durée</div>
+        <div class="reps-input-row">
+          <div class="reps-btn" id="minMinus">−</div>
+          <div class="reps-val" id="minVal">${minutes}</div>
+          <div class="reps-btn" id="minPlus">+</div>
+        </div>
+        <div class="exec-tier-name" style="margin-bottom:22px;">minutes</div>
+        <div class="exec-btn" id="cardioStartBtn">Démarrer</div>
+      </div>`;
+    $('minMinus').addEventListener('click', () => { minutes = Math.max(5, minutes-5); $('minVal').textContent = minutes; });
+    $('minPlus').addEventListener('click', () => { minutes += 5; $('minVal').textContent = minutes; });
+    $('cardioStartBtn').addEventListener('click', () => runCardioTimer(minutes));
+  }
+
+  function runCardioTimer(mins) {
+    const total = mins * 60;
+    let left = total;
+    const R = 88, C = 2*Math.PI*R;
+    $('cardioArea').innerHTML = `
+      <div class="exec-card">
+        <div class="timer-ring-wrap">
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            <circle class="timer-track" cx="100" cy="100" r="${R}"></circle>
+            <circle class="timer-fill" id="cardioRing" cx="100" cy="100" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="0" style="stroke:var(--cardio)"></circle>
+          </svg>
+          <div class="timer-center"><div class="timer-num" id="cardioNum">${mins}:00</div><div class="timer-label">min restantes</div></div>
+        </div>
+        <div class="exec-btn ghost" id="cardioStopBtn">Terminer maintenant</div>
+      </div>`;
+    const ring = $('cardioRing');
+    const finish = (actualMin) => {
+      clearInterval(timerHandle);
+      beep(3);
+      S.cardioLog.push({ date: todayStr(), type: 'libre', minutes: actualMin });
+      save();
+      toast('Séance cardio enregistrée');
+      sess = null; renderShell(); view = 'home'; renderView();
+    };
+    timerHandle = setInterval(() => {
+      left--;
+      const m = Math.floor(Math.max(0,left)/60), s = Math.max(0,left)%60;
+      $('cardioNum').textContent = m + ':' + String(s).padStart(2,'0');
+      ring.style.strokeDashoffset = C * (1 - left/total);
+      if (left <= 0) finish(mins);
+    }, 1000);
+    $('cardioStopBtn').addEventListener('click', () => finish(Math.round((total-left)/60)));
+  }
+
+  renderPicker();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.currentTarget.classList.remove('show'); });
+
+load();
+renderShell();
+renderView();
+</script>
+</body>
+</html>
